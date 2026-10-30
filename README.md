@@ -45,8 +45,13 @@ Differences from x/net on other platforms:
 
 All other methods, including multicast and batch I/O, are the x/net methods.
 
-This module is meant to be temporary: once x/net supports these controls on
-Windows, use `ipv4.NewPacketConn` and `ipv6.NewPacketConn` directly.
+## Upstream
+
+This module is meant to be temporary. Windows support for these controls in
+x/net is tracked by [golang/go#7175](https://go.dev/issue/7175) and proposed
+in [CL 853705](https://go.dev/cl/853705) and [CL 853706](https://go.dev/cl/853706).
+Once x/net supports them, use `ipv4.NewPacketConn` and `ipv6.NewPacketConn`
+directly.
 
 ## License
 
