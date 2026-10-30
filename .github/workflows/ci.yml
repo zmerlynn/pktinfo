@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go: ['1.26.x', stable] # the go.mod minimum and the latest release
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: gofmt
+        if: runner.os == 'Linux'
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - name: vet
+        run: go vet ./...
+      - name: cross vet
+        if: runner.os == 'Linux'
+        run: |
+          for t in windows/amd64 windows/386 windows/arm64 darwin/arm64 freebsd/amd64 openbsd/amd64 netbsd/arm64 solaris/amd64 aix/ppc64 plan9/amd64 js/wasm wasip1/wasm linux/arm; do
+            echo "$t"
+            GOOS=${t%/*} GOARCH=${t#*/} go vet ./...
+          done
+      - name: test
+        run: go test -count=1 -v ./...
+      - name: test (386)
+        if: runner.os == 'Windows'
+        env:
+          GOARCH: "386"
+        run: go test -count=1 ./...
+      - name: fuzz
+        if: runner.os == 'Linux' && matrix.go == 'stable'
+        run: go test -run '^$' -fuzz FuzzParseControls -fuzztime 30s .
